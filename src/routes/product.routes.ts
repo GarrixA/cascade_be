@@ -11,16 +11,24 @@ import {
   isProductValid,
 } from "../middlewares/productMiddleware";
 import fileUpload from "../middlewares/multers";
+import authMiddleware from "../middlewares/authMiddleware";
 
 const router = express.Router();
 
-router.post("/", fileUpload.array("images"), isProductValid, createProduct);
+router.post(
+  "/",
+  fileUpload.array("images"),
+  // isProductValid,
+  athenticate.authenticateUser,
+  athenticate.isSeller,
+  createProduct
+);
 
 router.get("/", getProducts);
 
-router.get("/products/organization", athenticate.authenticateUser);
+// router.get("/products/organization", athenticate.authenticateUser);
 
-router.get("/:id", isProductIdValid, getProductById);
+router.get("/:id", getProductById);
 
 router.patch(
   "/:id/availability",
@@ -28,10 +36,5 @@ router.patch(
   athenticate.isSeller,
   changeProductAvailability
 );
-
-// router.patch(
-//   "/:productId/assign-organization"
-//   isProductIdValid,
-// );
 
 export default router;

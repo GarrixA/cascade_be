@@ -1,11 +1,17 @@
 import { NextFunction, Request, Response } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt, { JsonWebTokenError, JwtPayload } from "jsonwebtoken";
 import { User } from "../database/models/User";
+import database_models from "../database/config/db.config";
+import { HttpException, sendResponse } from "../utils/httpRceptions";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET as string;
 
 interface AuthenticatedRequest extends Request {
   user?: any;
+}
+
+export interface ExpandedRequest extends Request {
+  user?: JwtPayload;
 }
 
 const authenticateUser = (
@@ -14,9 +20,9 @@ const authenticateUser = (
   next: NextFunction
 ): void => {
   const authHeader = req.headers.authorization;
-  console.log("authHeader");
+  // console.log("authHeader", req.headers);
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ message: "Unauthoriz" });
+    res.status(401).json({ message: "Unauthorized" });
     return;
   }
 
@@ -71,36 +77,80 @@ const isAdmin = async (
 };
 
 const isSeller = async (
-  req: AuthenticatedRequest,
+  req: ExpandedRequest,
   res: Response,
   next: NextFunction
-) => {
-  if (!req.user) {
-    res.status(401).json({ message: "Unauthorized access" });
+): Promise<void> => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) {
+    res
+      .status(401)
+      .json(new HttpException("UNAUTHORIZED", "Please login to continue!"));
+    return;
+  }
+
+  const decodedToken = jwt.decode(token) as JwtPayload;
+  if (
+    decodedToken &&
+    decodedToken.exp &&
+    Date.now() >= decodedToken.exp * 1000
+  ) {
+    res
+      .status(401)
+      .json(
+        new HttpException(
+          "UNAUTHORIZED",
+          "You have been loggedOut, Please login to continue!"
+        )
+      );
     return;
   }
 
   try {
-    const user = await User.findByPk(req?.user?.id);
-    if (!user) {
-      res.status(401).json({ message: "User not found" });
-      return;
-    }
+    const payLoad = jwt.verify(
+      token,
+      ACCESS_TOKEN_SECRET as string
+    ) as JwtPayload;
 
-    if (req.user.role !== "SELLER") {
-      res.status(403).json({ message: "Access denied. Sellers only." });
+    req.user = payLoad;
+
+    console.log("Req==============>", req.user.role);
+
+    if (req.user?.role !== "SELLER") {
+      res
+        .status(403)
+        .json(
+          new HttpException(
+            "FORBIDDEN",
+            " Only seller can perform this action!"
+          )
+        );
       return;
     }
 
     if (req.user.isPasswordExpired) {
-      res.status(403).json({ message: "Password has expired, update it!" });
+      sendResponse(
+        res,
+        403,
+        "FORBIDDEN",
+        "Password has expired, Please update your password!"
+      );
       return;
     }
 
     next();
   } catch (error) {
-    console.error("Error in isSeller middleware:", error);
-    res.status(500).json({ message: "Internal server error" });
+    if (error instanceof JsonWebTokenError) {
+      res
+        .status(401)
+        .json(new HttpException("UNAUTHORIZED", "Please login to continue!"));
+      return;
+    } else {
+      res
+        .status(401)
+        .json(new HttpException("UNAUTHORIZED", "Please login to continue!"));
+      return;
+    }
   }
 };
 

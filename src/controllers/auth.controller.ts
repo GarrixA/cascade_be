@@ -121,7 +121,7 @@ const registerUser = async (
  * @param res
  * @param next
  * @returns
- *  - If the user is an agency, it sends a verification email with a link and OTP.
+ *  - If the user is an SELLER, it sends a verification email with a link and OTP.
  */
 const login = async (req: Request, res: Response, next: NextFunction) => {
   passport.authenticate(
@@ -146,73 +146,52 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
           return sendResponse(res, 400, "BAD REQUEST", "Bad Request!");
         }
 
+        // Extract needed fields
         const { id, email, firstName, lastName, isPasswordExpired } = user;
         const role = (user as UserModelInclude).Roles?.roleName;
 
-        let authenticationtoken: string;
+        let authenticationToken: string;
         let tokenData: TokenData;
 
-        if (role === "AGENCY") {
-          // // OTP logic commented out
-          // const otp = randomatic("0", 6);
-
-          if (isPasswordExpired) {
-            tokenData = { id, role, /* otp, */ isPasswordExpired };
-          } else {
-            tokenData = { id, role /*, otp */ };
-          }
-          authenticationtoken = generateAccessToken(tokenData);
-
-          // const host = `${BASE_URL}/users`;
-          // const authenticationlink = `${host}/2fa?token=${authenticationtoken}`;
-
-          // const message = `Hello ${firstName + " " + lastName},<br><br>
-          // You recently requested to log in to cascade app. To complete the login process, enter the following verification code:<br><br>
-          // OTP: ${otp}<br><br>
-          // Or click the link to complete your login:<br><br>
-          // <a href='${authenticationlink}' style="
-          // background-color: MediumSeaGreen;
-          // color: white;
-          // padding: 6px 20px;
-          // border: none;
-          // border-radius: 5px;
-          // text-decoration: none;
-          // ">Click here to login</a><br><br>
-          // If you didn't request this, you can safely ignore this email. Your account is secure.<br><br>
-          // Thank you,<br><br>The cascade Technical Team`;
-
-          // const options = {
-          //   to: email,
-          //   subject: "Your Login Verification Code",
-          //   html: HTML_TEMPLATE(message, "Account verification"),
-          // };
-          // await insert_function<TokenModelAttributes>("Token", "create", {
-          //   token: authenticationtoken,
-          // });
-
-          // sendEmail(options);
-          return sendResponse(
-            res,
-            200,
-            "SUCCESS",
-            "Login successful!",
-            authenticationtoken
-          );
+        // Prepare token payload
+        if (isPasswordExpired) {
+          tokenData = { id, role, isPasswordExpired };
         } else {
-          if (isPasswordExpired) {
-            tokenData = { id, role, isPasswordExpired };
-          } else {
-            tokenData = { id, role };
-          }
-          authenticationtoken = generateAccessToken(tokenData);
-          return sendResponse(
-            res,
-            200,
-            "SUCCESS",
-            "Login successfully!",
-            authenticationtoken
-          );
+          tokenData = { id, role };
         }
+
+        // Generate JWT
+        authenticationToken = generateAccessToken(tokenData);
+
+        // If seller, you may want to handle OTP (currently commented out in your snippet)
+        // if (role === "SELLER") {
+        // Example OTP logic (optional, can uncomment if you need it)
+        // const otp = randomatic("0", 6);
+        // tokenData = { ...tokenData, otp };
+        // authenticationToken = generateAccessToken(tokenData);
+
+        // Send email or SMS with OTP (your previous code can go here)
+        // await insert_function<TokenModelAttributes>("Token", "create", {
+        //   token: authenticationToken,
+        // });
+
+        //   return sendResponse(
+        //     res,
+        //     200,
+        //     "SUCCESS",
+        //     "Login successful!",
+        //     authenticationToken
+        //   );
+        // }
+
+        // For ADMIN or other roles
+        return sendResponse(
+          res,
+          200,
+          "SUCCESS",
+          "Login successfully!",
+          authenticationToken
+        );
       });
     }
   )(req, res, next);
@@ -437,12 +416,12 @@ const assignUserOrganization = async (
     // Access roleName safely
     const roleInstance = (user as any).Roles;
     const roleName = roleInstance?.roleName;
-    if (roleName !== "AGENCY") {
+    if (roleName !== "SELLER") {
       sendResponse(
         res,
         403,
         "FORBIDDEN",
-        "Only AGENCY users can be assigned an organization"
+        "Only SELLER users can be assigned an organization"
       );
       return;
     }

@@ -24,7 +24,7 @@ This is the backend API for the cascade.
 ### Login
 
 - **POST** `/api/v1/auth/login`
-- Logs in a user. If the user is an AGENCY, sends a 2FA email.
+- Logs in a user. If the user is an SELLER, sends a 2FA email.
 
 ### Account Verification
 
@@ -34,7 +34,7 @@ This is the backend API for the cascade.
 ### Two Factor Authentication
 
 - **POST** `/api/v1/auth/2fa/:token`
-- Verifies OTP for AGENCY login.
+- Verifies OTP for SELLER login.
 
 ---
 
@@ -55,7 +55,7 @@ This is the backend API for the cascade.
 ### Assign Organization to User
 
 - **PATCH** `/api/v1/users/:userId/assign-organization`
-- Assigns an organization to an AGENCY user.
+- Assigns an organization to an SELLER user.
 
 ---
 

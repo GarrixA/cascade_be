@@ -11,6 +11,7 @@ interface ItemsAttributes {
   userId?: string;
   status?: string;
   isAvailable?: boolean;
+  price?: number; // 👈 new
 }
 
 export class Products
@@ -25,6 +26,7 @@ export class Products
   public title!: string;
   public status!: string;
   public isAvailable!: boolean;
+  public price!: number; // 👈 new
 
   public static associate(models: {
     Category: typeof Category;
@@ -91,6 +93,11 @@ const product_model = (sequelize: Sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,
+      },
+      price: {
+        type: DataTypes.DECIMAL(10, 2), // 👈 new
+        allowNull: false,
+        defaultValue: 0.0,
       },
     },
     {

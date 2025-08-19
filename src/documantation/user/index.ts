@@ -217,7 +217,7 @@ const user_routes = {
 
   assign_organization: {
     tags: ["User", "Organization"],
-    summary: "Assign an organization to a user (AGENCY only)",
+    summary: "Assign an organization to a user (SELLER only)",
     security: [{ bearerAuth: [] }],
     parameters: [
       {

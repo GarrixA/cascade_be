@@ -16,7 +16,8 @@ const basicInfo = {
   ],
   security: [
     {
-      google_auth: [],
+      // google_auth: [],
+      bearerAuth: [],
     },
   ],
 

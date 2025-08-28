@@ -1,12 +1,14 @@
 import { Request, Response } from "express";
 import { JwtPayload } from "jsonwebtoken";
 import { ValidationError } from "sequelize";
+import { Category } from "../database/models/Category";
+import { ProductTranslation } from "../database/models/ProductTranslation_model";
+import { User } from "../database/models/User";
+import { generateCode } from "../helpers/generate_code";
 import { uploadMultiple } from "../helpers/upload";
 import { category_utils } from "../utils/controller";
 import { insert_function, read_function } from "../utils/db_methods";
 import { sendResponse } from "../utils/httpRceptions";
-import { User } from "../database/models/User";
-import { Category } from "../database/models/Category";
 
 interface ProductAttributes {
   id?: string;
@@ -14,10 +16,11 @@ interface ProductAttributes {
   description: string;
   images: string[];
   categoryId: string;
-  status: string;
+  status?: string;
   isAvailable?: boolean;
   userId?: string;
   price?: number;
+  code?: string;
 }
 
 interface ExpandRequest extends Request {
@@ -29,6 +32,11 @@ const include = [
     model: User,
     as: "user",
     attributes: ["id", "firstName", "lastName", "email", "role"],
+  },
+  {
+    model: ProductTranslation,
+    as: "translations",
+    attributes: ["language", "title", "description"],
   },
   {
     model: Category,
@@ -119,6 +127,7 @@ export const createProduct = async (
       price,
       status: "New",
       userId: sellerId,
+      code: generateCode(),
     };
 
     const product = await insert_function<ProductAttributes>(

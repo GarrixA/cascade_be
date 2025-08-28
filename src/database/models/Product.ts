@@ -1,8 +1,6 @@
 import { DataTypes, Model, Sequelize, UUIDV4 } from "sequelize";
-import { Category } from "./Category";
-import { User } from "./User";
 
-interface ItemsAttributes {
+interface ProductAttributes {
   id?: string;
   title: string;
   description: string;
@@ -11,35 +9,34 @@ interface ItemsAttributes {
   userId?: string;
   status?: string;
   isAvailable?: boolean;
-  price?: number; // 👈 new
+  price?: number;
+  code?: string;
 }
 
 export class Products
-  extends Model<ItemsAttributes>
-  implements ItemsAttributes
+  extends Model<ProductAttributes>
+  implements ProductAttributes
 {
-  public images!: string[];
   public id!: string;
+  public title!: string;
+  public description!: string;
+  public images!: string[];
   public categoryId!: string;
   public userId!: string;
-  public description!: string;
-  public title!: string;
   public status!: string;
   public isAvailable!: boolean;
-  public price!: number; // 👈 new
+  public price!: number;
+  public code!: string;
 
-  public static associate(models: {
-    Category: typeof Category;
-    User: typeof User;
-  }) {
+  public static associate(models: any) {
     Products.belongsTo(models.Category, {
       foreignKey: "categoryId",
       as: "category",
     });
-
-    Products.belongsTo(models.User, {
-      foreignKey: "userId",
-      as: "user",
+    Products.belongsTo(models.User, { foreignKey: "userId", as: "user" });
+    Products.hasMany(models.ProductTranslation, {
+      foreignKey: "productId",
+      as: "translations",
     });
   }
 }
@@ -48,57 +45,28 @@ const product_model = (sequelize: Sequelize) => {
   Products.init(
     {
       id: {
-        allowNull: false,
-        primaryKey: true,
         type: DataTypes.UUID,
         defaultValue: UUIDV4,
-      },
-      title: {
-        allowNull: false,
-        type: DataTypes.STRING,
-      },
-      description: {
-        allowNull: false,
-        type: DataTypes.STRING,
-      },
-      status: {
-        allowNull: false,
-        type: DataTypes.STRING,
-      },
-      images: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+        primaryKey: true,
         allowNull: false,
       },
-      categoryId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "Categories",
-          key: "id",
-        },
-        onUpdate: "CASCADE",
-        onDelete: "SET NULL",
-      },
-      userId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "User",
-          key: "id",
-        },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
-      },
+      title: { type: DataTypes.STRING, allowNull: false },
+      description: { type: DataTypes.STRING, allowNull: false },
+      status: { type: DataTypes.STRING, allowNull: false },
+      images: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: false },
+      categoryId: { type: DataTypes.UUID, allowNull: false },
+      userId: { type: DataTypes.UUID, allowNull: false },
       isAvailable: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,
       },
       price: {
-        type: DataTypes.DECIMAL(10, 2), // 👈 new
+        type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
         defaultValue: 0.0,
       },
+      code: { type: DataTypes.STRING(5), allowNull: true, unique: true },
     },
     {
       sequelize,

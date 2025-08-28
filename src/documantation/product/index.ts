@@ -26,9 +26,17 @@ const product_routes = {
               },
               categoryId: { type: "string", example: "uuid-category-id" },
               isAvailable: { type: "boolean", example: true },
-              price: { type: "number", example: 49.99 }, // 👈 NEW FIELD
+              price: { type: "number", example: 49.99 },
+              code: { type: "string", example: "A1B2C" }, // 👈 Added code field
             },
-            required: ["title", "description", "images", "categoryId", "price"], // 👈 added price as required
+            required: [
+              "title",
+              "description",
+              "images",
+              "categoryId",
+              "price",
+              "code",
+            ],
           },
         },
       },

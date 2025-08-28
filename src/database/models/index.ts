@@ -5,6 +5,7 @@ import token_model from "./Token";
 import category_model from "./Category";
 import product_model from "./Product";
 import Organization_model from "./Organization";
+import ProductTranslation_model from "./ProductTranslation_model";
 
 const Models = (sequelize: Sequelize) => {
   const User = user_model(sequelize);
@@ -12,9 +13,18 @@ const Models = (sequelize: Sequelize) => {
   const Token = token_model(sequelize);
   const Category = category_model(sequelize);
   const Products = product_model(sequelize);
+  const ProductTranslation = ProductTranslation_model(sequelize);
   const Organization = Organization_model(sequelize);
 
-  return { User, Role, Token, Category, Products, Organization };
+  return {
+    User,
+    Role,
+    Token,
+    Category,
+    Products,
+    ProductTranslation,
+    Organization,
+  };
 };
 
 export default Models;
